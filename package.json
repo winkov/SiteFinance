@@ -6,7 +6,7 @@
   ],
   "scripts": {
     "dev": "cd expense-tracker && npm run dev",
-    "build": "cd expense-tracker && npm run build && node ./copy-next.js",
+    "build": "cd expense-tracker && npm run build && node ../copy-next.js",
     "vercel-build": "npm run build",
     "start": "cd expense-tracker && npm run start"
   },
