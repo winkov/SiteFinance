@@ -567,6 +567,7 @@ export default function Home() {
             <p className="text-center text-slate-400 mb-2">
               {Array.from(new Set(expenses.map(e => e.paidBy))).join(' & ')}
             </p>
+
             {/* Modal de Salários */}
             {showSalaryModal && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -603,7 +604,544 @@ export default function Home() {
                 </div>
               </div>
             )}
-            {/* ...restante do código da aba tabela... */}
+
+            {/* Formulário */}
+            <div className="bg-slate-800 p-6 rounded-lg shadow-2xl mb-8 border border-slate-700">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-white">Adicionar Despesa</h2>
+                {totalSalary > 0 && (
+                  <button
+                    onClick={() => setShowSalaryModal(true)}
+                    className="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded hover:bg-slate-600"
+                  >
+                    ✏️ Editar Renda
+                  </button>
+                )}
+                {totalSalary === 0 && (
+                  <button
+                    onClick={() => setShowSalaryModal(true)}
+                    className="text-sm bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700"
+                  >
+                    + Adicionar Renda
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <select
+                  value={shared}
+                  onChange={e => setShared(e.target.value as 'Compartilhada' | 'Individual')}
+                  className="p-3 border-2 border-slate-600 rounded bg-slate-700 text-white focus:outline-none focus:border-blue-500"
+                  title="Tipo de despesa"
+                >
+                  <option value="Compartilhada">Compartilhada</option>
+                  <option value="Individual">Individual</option>
+                </select>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="Valor"
+                    value={amount}
+                    onChange={(e) => {
+                      setAmount(e.target.value)
+                      setShowSuggestions(true)
+                    }}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                    className="w-full p-3 border-2 border-slate-600 rounded bg-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                  />
+                  {showSuggestions && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-slate-700 border border-slate-600 rounded shadow-lg z-10">
+                      {SUGGESTED_AMOUNTS.map(sug => (
+                        <button
+                          key={sug}
+                          onClick={() => {
+                            setAmount(sug.toString())
+                            setShowSuggestions(false)
+                          }}
+                          className="w-full text-left px-4 py-2 hover:bg-slate-600 text-white first:rounded-t last:rounded-b"
+                        >
+                          R$ {sug.toFixed(2)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <select
+                  value={paidBy}
+                  onChange={(e) => setPaidBy(e.target.value as 'Samuel' | 'Camila')}
+                  className="p-3 border-2 border-slate-600 rounded bg-slate-700 text-white focus:outline-none focus:border-blue-500"
+                >
+                  <option value="Samuel">Samuel pagou</option>
+                  <option value="Camila">Camila pagou</option>
+                </select>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="p-3 border-2 border-slate-600 rounded bg-slate-700 text-white focus:outline-none focus:border-blue-500"
+                >
+                  {CATEGORIES.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  placeholder="Descrição (ex: Aluguel, Pizza, Uber...)"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="p-3 border-2 border-slate-600 rounded bg-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 md:col-span-2"
+                />
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="p-3 border-2 border-slate-600 rounded bg-slate-700 text-white focus:outline-none focus:border-blue-500"
+                />
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    min={1}
+                    value={installments}
+                    onChange={e => setInstallments(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="p-3 border-2 border-slate-600 rounded bg-slate-700 text-white focus:outline-none focus:border-blue-500 w-28"
+                    placeholder="Parcelas"
+                    title="Número de parcelas"
+                  />
+                  <input
+                    type="number"
+                    min={1}
+                    value={initialInstallment}
+                    onChange={e => setInitialInstallment(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="p-3 border-2 border-slate-600 rounded bg-slate-700 text-white focus:outline-none focus:border-blue-500 w-28"
+                    placeholder="Parcela inicial"
+                    title="Parcela inicial"
+                  />
+                </div>
+                <select
+                  value={recurrence}
+                  onChange={e => setRecurrence(e.target.value as 'Nenhuma' | 'Mensal' | 'Semanal' | 'Anual')}
+                  className="p-3 border-2 border-slate-600 rounded bg-slate-700 text-white focus:outline-none focus:border-blue-500"
+                  title="Recorrência"
+                >
+                  <option value="Nenhuma">Sem recorrência</option>
+                  <option value="Mensal">Mensal</option>
+                  <option value="Semanal">Semanal</option>
+                  <option value="Anual">Anual</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={addExpense}
+                  className={`bg-blue-600 text-white p-3 rounded font-semibold hover:bg-blue-700 transition md:col-span-3 ${editingId ? 'animate-pulse ring-4 ring-yellow-400 ring-opacity-60' : ''}`}
+                  style={editingId ? { fontWeight: 'bold', letterSpacing: '1px', background: '#facc15', color: '#1e293b' } : {}}
+                  disabled={!!inlineEdit}
+                  title={inlineEdit ? 'Conclua a edição inline antes de adicionar nova despesa' : ''}
+                >
+                  {editingId ? 'Salvar Alteração' : 'Adicionar Despesa'}
+                </button>
+              </div>
+            </div>
+
+            {/* Navegação de meses - Melhorada */}
+            <div className="mb-8 flex justify-center items-center gap-4">
+              <select
+                value={monthValue}
+                onChange={handleMonthChange}
+                className="px-4 py-2 bg-slate-800 text-white border-2 border-slate-600 rounded hover:border-blue-500 focus:outline-none focus:border-blue-500 font-semibold text-lg"
+              >
+                {Array.from({ length: 12 }, (_, i) => {
+                  const year = new Date().getFullYear()
+                  const month = i
+                  return (
+                    <option key={month} value={`${year}-${String(month + 1).padStart(2, '0')}`}>
+                      {new Date(year, month).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                    </option>
+                  )
+                })}
+              </select>
+              <button onClick={handlePrevMonth} className="bg-slate-700 text-white px-4 py-2 rounded hover:bg-slate-600">
+                ← Anterior
+              </button>
+              <button onClick={handleNextMonth} className="bg-slate-700 text-white px-4 py-2 rounded hover:bg-slate-600">
+                Próximo →
+              </button>
+            </div>
+
+            {/* Resumo */}
+            <div className="bg-slate-800 p-6 rounded-lg shadow-2xl mb-8 border border-slate-700">
+              <h2 className="text-xl font-semibold mb-4 text-white">Resumo do Mês</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center p-4 bg-gradient-to-br from-green-900 to-green-800 rounded border border-green-700">
+                  <p className="text-3xl font-bold text-green-400">R$ {total.toFixed(2)}</p>
+                  <p className="text-green-200 font-medium">Total de Despesas</p>
+                </div>
+                <div className="text-center p-4 bg-gradient-to-br from-blue-900 to-blue-800 rounded border border-blue-700">
+                  <p className="text-3xl font-bold text-blue-400">R$ {samuelTotal.toFixed(2)}</p>
+                  <p className="text-blue-200 font-medium">Samuel ({samuelPercent}%)</p>
+                </div>
+                <div className="text-center p-4 bg-gradient-to-br from-pink-900 to-pink-800 rounded border border-pink-700">
+                  <p className="text-3xl font-bold text-pink-400">R$ {camilaTotal.toFixed(2)}</p>
+                  <p className="text-pink-200 font-medium">Camila ({camilaPercent}%)</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Contribuições esperadas por salário - NOVO CARD */}
+            {(samuelSalary > 0 || camilaSalary > 0) && (
+              <div className="bg-slate-800 p-6 rounded-lg shadow-2xl mb-8 border-2 border-indigo-700">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2">
+                  <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+                    💡 Análise por Salário
+                  </h2>
+                  <div className="flex gap-2">
+                    <select
+                      value={salaryPerson}
+                      onChange={e => setSalaryPerson(e.target.value as 'Samuel' | 'Camila')}
+                      className="p-2 rounded bg-slate-700 text-white border border-slate-600 font-semibold"
+                      style={{ minWidth: 120 }}
+                    >
+                      <option value="Samuel">Samuel</option>
+                      <option value="Camila">Camila</option>
+                    </select>
+                    <select
+                      value={salaryType}
+                      onChange={e => setSalaryType(e.target.value as 'Ambos' | 'Compartilhada' | 'Individual')}
+                      className="p-2 rounded bg-slate-700 text-white border border-slate-600 font-semibold"
+                      style={{ minWidth: 160 }}
+                    >
+                      <option value="Ambos">Todos os gastos</option>
+                      <option value="Compartilhada">Só compartilhadas</option>
+                      <option value="Individual">Só individuais</option>
+                    </select>
+                  </div>
+                </div>
+                <p className="text-slate-400 mb-4 text-sm">
+                  {salaryType === 'Compartilhada' && 'Considerando a proporção do salário para despesas compartilhadas.'}
+                  {salaryType === 'Individual' && 'Considerando apenas despesas individuais.'}
+                  {salaryType === 'Ambos' && 'Considerando todas as despesas pagas pela pessoa selecionada.'}
+                </p>
+                <div className="p-4 rounded border-2 border-blue-700 bg-slate-700 max-w-md mx-auto">
+                  <p className="text-blue-300 mb-2 font-semibold flex items-center gap-2">
+                    {salaryPerson}
+                  </p>
+                  <p className="text-xl font-bold text-blue-400">Salário: R$ {salary.toFixed(2)}</p>
+                  {salaryType === 'Compartilhada' && (
+                    <>
+                      <p className="text-slate-400 text-sm mb-2">({salaryPercent}% do total)</p>
+                      <p className="text-slate-300 text-sm mb-2">Contribuição esperada: <span className="font-bold text-green-400">R$ {expectedContribution.toFixed(2)}</span></p>
+                    </>
+                  )}
+                  <p className="text-slate-300 text-sm">Pagou: <span className="font-bold text-blue-400">R$ {filteredSalaryTotal.toFixed(2)}</span></p>
+                  {salaryType === 'Compartilhada' && (
+                    <p className="text-slate-400 text-sm mt-2">
+                      {filteredSalaryTotal > expectedContribution
+                        ? `💸 Pagou R$ ${(filteredSalaryTotal - expectedContribution).toFixed(2)} a mais`
+                        : '✅ Equilibrado'}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Gráficos */}
+            {monthlyExpenses.length > 0 && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                {/* Gráfico por Pessoa */}
+                {personData.length > 0 && (
+                  <div className="bg-slate-800 p-6 rounded-lg shadow-2xl border border-slate-700">
+                    <h2 className="text-xl font-semibold mb-4 text-white">Despesas por Pessoa</h2>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie data={personData} cx="50%" cy="50%" labelLine={false} label={({ name, percent }) => `${name}: ${(percent ? percent * 100 : 0).toFixed(0)}%`} outerRadius={80} fill="#8884d8" dataKey="value">
+                          {personData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={index === 0 ? '#4ECDC4' : '#FF6B6B'} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value: any) => `R$ ${Number(value).toFixed(2)}`} contentStyle={{ backgroundColor: '#334155', border: 'none', borderRadius: '8px' }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+
+                {/* Gráfico por Categoria */}
+                {categoryData.length > 0 && (
+                  <div className="bg-slate-800 p-6 rounded-lg shadow-2xl border border-slate-700">
+                    <h2 className="text-xl font-semibold mb-4 text-white">Despesas por Categoria</h2>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie data={categoryData} cx="50%" cy="50%" labelLine={false} label={({ name, percent }) => `${name}: ${(percent ? percent * 100 : 0).toFixed(0)}%`} outerRadius={80} fill="#8884d8" dataKey="value">
+                          {categoryData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value: any) => `R$ ${Number(value).toFixed(2)}`} contentStyle={{ backgroundColor: '#334155', border: 'none', borderRadius: '8px' }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Detalhes por categoria com quem pagou */}
+            {categoryDataDetailed.length > 0 && (
+              <div className="bg-slate-800 p-6 rounded-lg shadow-2xl mb-8 border border-slate-700">
+                <h2 className="text-xl font-semibold mb-4 text-white">Despesas por Categoria - Detalhado</h2>
+                <div className="space-y-3">
+                  {categoryDataDetailed.map((cat, idx) => (
+                    <div key={cat.name} className="bg-slate-700 p-4 rounded border border-slate-600">
+                      <div className="flex justify-between items-center mb-2">
+                        <h3 className="text-lg font-bold" style={{ color: COLORS[idx % COLORS.length] }}>
+                          {cat.name}
+                        </h3>
+                        <p className="text-2xl font-bold text-white">R$ {cat.value.toFixed(2)}</p>
+                      </div>
+                      <div className="flex gap-6 text-sm">
+                        {cat.Samuel > 0 && (
+                          <div className="flex-1">
+                            <p className="text-slate-400">Samuel</p>
+                            <p className="text-blue-400 font-bold">R$ {cat.Samuel.toFixed(2)}</p>
+                            <p className="text-slate-500">{((cat.Samuel / cat.value) * 100).toFixed(0)}% da categoria</p>
+                          </div>
+                        )}
+                        {cat.Camila > 0 && (
+                          <div className="flex-1">
+                            <p className="text-slate-400">Camila</p>
+                            <p className="text-pink-400 font-bold">R$ {cat.Camila.toFixed(2)}</p>
+                            <p className="text-slate-500">{((cat.Camila / cat.value) * 100).toFixed(0)}% da categoria</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Lista de despesas */}
+            <div className="bg-slate-800 p-6 rounded-lg shadow-2xl border border-slate-700">
+              <div className="flex flex-wrap gap-2 mb-4">
+                <button
+                  onClick={restoreExpensesBackup}
+                  className="bg-indigo-700 hover:bg-indigo-800 text-white px-4 py-2 rounded font-semibold"
+                  title="Restaurar backup das despesas"
+                >
+                  Restaurar Backup
+                </button>
+                <button
+                  onClick={() => {
+                    const data = localStorage.getItem('expenses_backup') || localStorage.getItem('expenses')
+                    if (data) {
+                      const blob = new Blob([data], { type: 'application/json' })
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = `despesas-backup-${new Date().toISOString().slice(0, 10)}.json`
+                      document.body.appendChild(a)
+                      a.click()
+                      document.body.removeChild(a)
+                      URL.revokeObjectURL(url)
+                    } else {
+                      alert('Nenhum backup encontrado.')
+                    }
+                  }}
+                  className="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded font-semibold"
+                  title="Exportar backup das despesas"
+                >
+                  Exportar Backup
+                </button>
+                <label className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded font-semibold cursor-pointer">
+                  Importar Backup
+                  <input
+                    type="file"
+                    accept="application/json"
+                    style={{ display: 'none' }}
+                    onChange={e => {
+                      const file = e.target.files?.[0]
+                      if (!file) return
+                      const reader = new FileReader()
+                      reader.onload = evt => {
+                        try {
+                          const imported = JSON.parse(evt.target?.result as string)
+                          if (!Array.isArray(imported)) throw new Error('Formato inválido')
+                          setExpenses(imported)
+                          localStorage.setItem('expenses', JSON.stringify(imported))
+                          localStorage.setItem('expenses_backup', JSON.stringify(imported))
+                          alert('Backup importado com sucesso!')
+                        } catch (err) {
+                          alert('Erro ao importar backup: ' + (err as Error).message)
+                        }
+                      }
+                      reader.readAsText(file)
+                    }}
+                  />
+                </label>
+              </div>
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-2">
+                <h2 className="text-xl font-semibold text-white">Detalhes das Despesas</h2>
+                <div>
+                  <label className="text-slate-300 mr-2">Filtrar por pessoa:</label>
+                  <select
+                    value={personFilter}
+                    onChange={e => setPersonFilter(e.target.value as 'Todos' | 'Samuel' | 'Camila')}
+                    className="p-2 rounded bg-slate-700 text-white border border-slate-600"
+                  >
+                    <option value="Todos">Todos</option>
+                    <option value="Samuel">Samuel</option>
+                    <option value="Camila">Camila</option>
+                  </select>
+                </div>
+              </div>
+              {monthlyExpenses.length === 0 ? (
+                <p className="text-slate-400 text-center py-8">Nenhuma despesa registrada para este mês</p>
+              ) : (
+                <div className="overflow-x-scroll" style={{ minWidth: '1100px', maxWidth: '100vw', width: '100%' }}>
+                  <table className="w-full">
+                    <thead className="bg-slate-700 border-b-2 border-slate-600">
+                      <tr>
+                        <th className="text-left p-3 text-slate-300">Data</th>
+                        <th className="text-left p-3 text-slate-300">Descrição</th>
+                        <th className="text-left p-3 text-slate-300">Parcela</th>
+                        <th className="text-left p-3 text-slate-300">Categoria</th>
+                        <th className="text-left p-3 text-slate-300">Quem Pagou</th>
+                        <th className="text-left p-3 text-slate-300">Tipo</th>
+                        <th className="text-right p-3 text-slate-300">Valor</th>
+                        <th className="text-right p-3 text-slate-300">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {monthlyExpenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(expense => {
+                        let parcelaInfo = ''
+                        const match = expense.description.match(/\(Parcela ([0-9]+\/[0-9]+)/)
+                        if (match) {
+                          parcelaInfo = match[1]
+                        }
+                        const isEditing = editingId === expense.id && inlineEdit;
+                        return (
+                          <tr key={expense.id} className="border-b border-slate-700 hover:bg-slate-700 transition">
+                            <td className="p-3 text-slate-200 font-medium">{new Date(expense.date).toLocaleDateString('pt-BR')}</td>
+                            <td className="p-3 text-slate-200">
+                              {isEditing ? (
+                                <input
+                                  type="text"
+                                  value={inlineEdit.description}
+                                  onChange={e => handleInlineChange('description', e.target.value)}
+                                  className="p-1 rounded bg-slate-600 text-white w-32"
+                                />
+                              ) : (
+                                expense.description.replace(/\s*\(Parcela.*\)$/,'')
+                              )}
+                            </td>
+                            <td className="p-3 text-slate-200">
+                              {isEditing ? (
+                                <>
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    value={inlineEdit.parcelaAtual}
+                                    onChange={e => handleInlineChange('parcelaAtual', e.target.value)}
+                                    className="p-1 rounded bg-slate-600 text-white w-10 mr-1"
+                                    style={{width:'2.5em'}}
+                                  />
+                                  <span>/</span>
+                                  <input
+                                    type="number"
+                                    min={inlineEdit.parcelaAtual || 1}
+                                    value={inlineEdit.parcelaTotal}
+                                    onChange={e => handleInlineChange('parcelaTotal', e.target.value)}
+                                    className="p-1 rounded bg-slate-600 text-white w-10"
+                                    style={{width:'2.5em'}}
+                                  />
+                                </>
+                              ) : (
+                                parcelaInfo
+                              )}
+                            </td>
+                            <td className="p-3">
+                              {isEditing ? (
+                                <select
+                                  value={inlineEdit.category}
+                                  onChange={e => handleInlineChange('category', e.target.value)}
+                                  className="p-1 rounded bg-slate-600 text-white"
+                                >
+                                  {CATEGORIES.map(cat => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <span className="bg-blue-900 text-blue-300 px-3 py-1 rounded-full text-sm font-medium border border-blue-700">{expense.category}</span>
+                              )}
+                            </td>
+                            <td className="p-3 text-slate-200 font-medium">
+                              {isEditing ? (
+                                <select
+                                  value={inlineEdit.paidBy}
+                                  onChange={e => handleInlineChange('paidBy', e.target.value)}
+                                  className="p-1 rounded bg-slate-600 text-white"
+                                >
+                                  <option value="Samuel">Samuel</option>
+                                  <option value="Camila">Camila</option>
+                                </select>
+                              ) : (
+                                expense.paidBy
+                              )}
+                            </td>
+                            <td className="p-3 text-slate-200 font-medium">
+                              {isEditing ? (
+                                <select
+                                  value={inlineEdit.shared}
+                                  onChange={e => handleInlineChange('shared', e.target.value)}
+                                  className="p-1 rounded bg-slate-600 text-white"
+                                >
+                                  <option value="Compartilhada">Compartilhada</option>
+                                  <option value="Individual">Individual</option>
+                                </select>
+                              ) : (
+                                expense.shared === false ? 'Individual' : 'Compartilhada'
+                              )}
+                            </td>
+                            <td className="p-3 text-right font-bold text-slate-200">
+                              {isEditing ? (
+                                <input
+                                  type="number"
+                                  value={inlineEdit.amount}
+                                  onChange={e => handleInlineChange('amount', e.target.value)}
+                                  className="p-1 rounded bg-slate-600 text-white w-20"
+                                />
+                              ) : (
+                                `R$ ${expense.amount.toFixed(2)}`
+                              )}
+                            </td>
+                            <td className="p-3 text-right">
+                              {isEditing ? (
+                                <>
+                                  <button
+                                    className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded mr-2"
+                                    onClick={handleInlineSave}
+                                  >Salvar</button>
+                                  <button
+                                    className="bg-gray-500 hover:bg-gray-600 text-white px-2 py-1 rounded"
+                                    onClick={handleInlineCancel}
+                                  >Cancelar</button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded mr-2"
+                                    onClick={() => handleEdit(expense)}
+                                  >Editar</button>
+                                  <button
+                                    className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded"
+                                    onClick={() => handleDelete(expense.id)}
+                                  >Excluir</button>
+                                </>
+                              )}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
