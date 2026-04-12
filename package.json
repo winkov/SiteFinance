@@ -1,7 +1,18 @@
 {
+  "name": "sitefinance-root",
+  "private": true,
+  "workspaces": [
+    "expense-tracker"
+  ],
+  "scripts": {
+    "dev": "cd expense-tracker && npm run dev",
+    "build": "cd expense-tracker && npm run build",
+    "start": "cd expense-tracker && npm run start"
+  },
   "dependencies": {
     "@capacitor/android": "^8.2.0",
     "@capacitor/cli": "^8.2.0",
-    "@capacitor/core": "^8.2.0"
+    "@capacitor/core": "^8.2.0",
+    "next": "16.1.6"
   }
 }
