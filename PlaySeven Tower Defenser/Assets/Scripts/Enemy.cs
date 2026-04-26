@@ -8,56 +8,68 @@ public class Enemy : MonoBehaviour
     public int castleDamage = 1;
 
     private int currentHealth;
-    private int currentWaypointIndex = 0;
-    private WaypointPath path;
+    private int currentWaypointIndex;
+    private WaypointPath waypointPath;
     private WaveManager waveManager;
-
-    public int CurrentHealth { get { return currentHealth; } }
 
     void Start()
     {
         currentHealth = maxHealth;
-        path = FindObjectOfType<WaypointPath>();
-        waveManager = FindObjectOfType<WaveManager>();
+        currentWaypointIndex = 0;
 
-        if (path != null && path.Count > 0)
-        {
-            transform.position = path.GetWaypoint(0).position;
-            currentWaypointIndex = 1;
-        }
+        waypointPath = FindFirstObjectByType<WaypointPath>();
+        waveManager = FindFirstObjectByType<WaveManager>();
     }
 
     void Update()
     {
-        if (GameManager.Instance != null && GameManager.Instance.IsGameOver) return;
-        if (path == null || path.Count == 0) return;
-
-        if (currentWaypointIndex >= path.Count)
+        if (waypointPath == null || waypointPath.Count == 0)
         {
-            ReachCastle();
             return;
         }
 
-        Transform targetWaypoint = path.GetWaypoint(currentWaypointIndex);
-        Vector3 direction = (targetWaypoint.position - transform.position).normalized;
-        transform.position += direction * speed * Time.deltaTime;
+        MoveAlongPath();
+    }
 
-        if (Vector3.Distance(transform.position, targetWaypoint.position) < 0.1f)
+    void MoveAlongPath()
+    {
+        Transform targetWaypoint = waypointPath.GetWaypoint(currentWaypointIndex);
+
+        if (targetWaypoint == null)
+        {
+            return;
+        }
+
+        transform.position = Vector3.MoveTowards(
+            transform.position,
+            targetWaypoint.position,
+            speed * Time.deltaTime
+        );
+
+        float distanceToWaypoint = Vector3.Distance(transform.position, targetWaypoint.position);
+
+        if (distanceToWaypoint <= 0.05f)
         {
             currentWaypointIndex++;
+
+            if (currentWaypointIndex >= waypointPath.Count)
+            {
+                ReachEndOfPath();
+            }
         }
     }
 
     public void TakeDamage(int damage)
     {
         currentHealth -= damage;
+
         if (currentHealth <= 0)
         {
             Die(true);
         }
     }
 
-    void ReachCastle()
+    void ReachEndOfPath()
     {
         if (GameManager.Instance != null)
         {

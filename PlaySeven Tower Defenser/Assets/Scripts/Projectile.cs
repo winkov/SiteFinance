@@ -2,15 +2,16 @@ using UnityEngine;
 
 public class Projectile : MonoBehaviour
 {
-    public float speed = 20f;
+    public float speed = 15f;
+    public float hitDistance = 0.25f;
 
     private Enemy target;
     private int damage;
 
-    public void SetTarget(Enemy enemy, int dmg)
+    public void SetTarget(Enemy enemy, int projectileDamage)
     {
         target = enemy;
-        damage = dmg;
+        damage = projectileDamage;
     }
 
     void Update()
@@ -21,11 +22,22 @@ public class Projectile : MonoBehaviour
             return;
         }
 
-        Vector3 direction = (target.transform.position - transform.position).normalized;
-        transform.position += direction * speed * Time.deltaTime;
-        transform.LookAt(target.transform);
+        MoveToTarget();
+    }
 
-        if (Vector3.Distance(transform.position, target.transform.position) < 0.5f)
+    void MoveToTarget()
+    {
+        Vector3 targetPosition = target.transform.position + Vector3.up * 0.5f;
+
+        transform.position = Vector3.MoveTowards(
+            transform.position,
+            targetPosition,
+            speed * Time.deltaTime
+        );
+
+        transform.LookAt(targetPosition);
+
+        if (Vector3.Distance(transform.position, targetPosition) <= hitDistance)
         {
             target.TakeDamage(damage);
             Destroy(gameObject);

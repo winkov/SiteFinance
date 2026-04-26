@@ -15,8 +15,8 @@ public class UIManager : MonoBehaviour
 
     void Start()
     {
-        waveManager = FindObjectOfType<WaveManager>();
-        buildManager = FindObjectOfType<BuildManager>();
+        waveManager = FindFirstObjectByType<WaveManager>();
+        buildManager = FindFirstObjectByType<BuildManager>();
 
         if (startWaveButton != null)
         {

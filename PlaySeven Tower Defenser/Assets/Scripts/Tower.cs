@@ -2,98 +2,76 @@ using UnityEngine;
 
 public class Tower : MonoBehaviour
 {
-    public float range = 10f;
+    public float range = 8f;
     public float fireRate = 1f;
     public int damage = 20;
-    public int level = 1;
-    public int maxLevel = 3;
-    public int[] upgradeCosts = { 50, 100 };
     public GameObject projectilePrefab;
     public Transform firePoint;
 
-    private float fireCooldown = 0f;
+    private float fireTimer;
 
     void Update()
     {
-        if (GameManager.Instance != null && GameManager.Instance.IsGameOver) return;
+        fireTimer -= Time.deltaTime;
 
-        fireCooldown -= Time.deltaTime;
-        if (fireCooldown <= 0f)
+        if (fireTimer <= 0f)
         {
-            Enemy target = FindTarget();
+            Enemy target = FindNearestEnemy();
+
             if (target != null)
             {
                 Shoot(target);
-                fireCooldown = 1f / fireRate;
+                fireTimer = 1f / fireRate;
             }
         }
     }
 
-    Enemy FindTarget()
+    Enemy FindNearestEnemy()
     {
-        Enemy[] enemies = FindObjectsOfType<Enemy>();
-        Enemy closestEnemy = null;
-        float closestDistance = range;
+        Enemy[] enemies = FindObjectsByType<Enemy>(FindObjectsSortMode.None);
+        Enemy nearestEnemy = null;
+        float nearestDistance = range;
 
         foreach (Enemy enemy in enemies)
         {
             float distance = Vector3.Distance(transform.position, enemy.transform.position);
-            if (distance <= closestDistance)
+
+            if (distance <= nearestDistance)
             {
-                closestDistance = distance;
-                closestEnemy = enemy;
+                nearestDistance = distance;
+                nearestEnemy = enemy;
             }
         }
 
-        return closestEnemy;
+        return nearestEnemy;
     }
 
     void Shoot(Enemy target)
     {
-        if (projectilePrefab == null) return;
+        if (projectilePrefab == null)
+        {
+            return;
+        }
 
-        Vector3 spawnPosition = firePoint != null ? firePoint.position : transform.position + Vector3.up;
-        GameObject projectileObj = Instantiate(projectilePrefab, spawnPosition, Quaternion.identity);
-        Projectile projectile = projectileObj.GetComponent<Projectile>();
+        Vector3 spawnPosition = transform.position + Vector3.up;
+
+        if (firePoint != null)
+        {
+            spawnPosition = firePoint.position;
+        }
+
+        GameObject projectileObject = Instantiate(projectilePrefab, spawnPosition, Quaternion.identity);
+        Projectile projectile = projectileObject.GetComponent<Projectile>();
+
         if (projectile != null)
         {
             projectile.SetTarget(target, damage);
         }
     }
 
-    public bool CanUpgrade()
+    void OnDrawGizmosSelected()
     {
-        if (GameManager.Instance == null) return false;
-        if (level >= maxLevel) return false;
-
-        int cost = GetUpgradeCost();
-        return cost > 0 && GameManager.Instance.GetGold() >= cost;
-    }
-
-    public int GetUpgradeCost()
-    {
-        int costIndex = level - 1;
-        if (costIndex < 0 || costIndex >= upgradeCosts.Length) return 0;
-
-        return upgradeCosts[costIndex];
-    }
-
-    public void Upgrade()
-    {
-        if (!CanUpgrade()) return;
-
-        int cost = GetUpgradeCost();
-        if (!GameManager.Instance.SpendGold(cost)) return;
-
-        level++;
-        damage += 10;
-        range += 1.5f;
-        fireRate += 0.25f;
-        transform.localScale *= 1.08f;
-    }
-
-    void OnMouseDown()
-    {
-        Upgrade();
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, range);
     }
 }

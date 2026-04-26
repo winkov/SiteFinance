@@ -9,7 +9,7 @@ public class BonusSystem : MonoBehaviour
 
     void Start()
     {
-        gameManager = FindObjectOfType<GameManager>();
+        gameManager = FindFirstObjectByType<GameManager>();
     }
 
     public void ApplyBonus()
@@ -19,7 +19,7 @@ public class BonusSystem : MonoBehaviour
             gameManager.AddGold(goldBonus);
         }
 
-        Tower[] towers = FindObjectsOfType<Tower>();
+        Tower[] towers = FindObjectsByType<Tower>(FindObjectsSortMode.None);
         foreach (Tower tower in towers)
         {
             tower.damage = Mathf.RoundToInt(tower.damage * damageMultiplier);

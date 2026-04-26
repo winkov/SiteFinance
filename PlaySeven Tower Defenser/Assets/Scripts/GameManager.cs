@@ -26,8 +26,8 @@ public class GameManager : MonoBehaviour
     {
         gold = startingGold;
         castleHealth = castleMaxHealth;
-        uiManager = FindObjectOfType<UIManager>();
-        waveManager = FindObjectOfType<WaveManager>();
+        uiManager = FindFirstObjectByType<UIManager>();
+        waveManager = FindFirstObjectByType<WaveManager>();
         UpdateUI();
     }
 

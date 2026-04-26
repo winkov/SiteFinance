@@ -21,8 +21,8 @@ public class WaveManager : MonoBehaviour
 
     void Start()
     {
-        bonusSystem = FindObjectOfType<BonusSystem>();
-        uiManager = FindObjectOfType<UIManager>();
+        bonusSystem = FindFirstObjectByType<BonusSystem>();
+        uiManager = FindFirstObjectByType<UIManager>();
         RefreshUI();
     }
 
