@@ -5,14 +5,15 @@ public class WaveManager : MonoBehaviour
 {
     public GameObject enemyPrefab;
     public Transform spawnPoint;
-    public int[] enemiesPerWave = { 5, 10, 15, 20 };
-    public float spawnDelay = 1f;
+    public int[] enemiesPerWave = { 5, 8, 12, 16, 20 };
+    public float spawnDelay = 0.75f;
     public float enemyHealthMultiplierPerWave = 1.25f;
     public float enemySpeedBonusPerWave = 0.15f;
+    public bool debugLogs = true;
 
-    private int currentWave = 0;
-    private int aliveEnemies = 0;
-    private bool waveRunning = false;
+    private int currentWave;
+    private int aliveEnemies;
+    private bool waveRunning;
     private BonusSystem bonusSystem;
     private UIManager uiManager;
 
@@ -21,8 +22,18 @@ public class WaveManager : MonoBehaviour
 
     void Start()
     {
-        bonusSystem = FindFirstObjectByType<BonusSystem>();
-        uiManager = FindFirstObjectByType<UIManager>();
+        bonusSystem = FindAnyObjectByType<BonusSystem>();
+        uiManager = FindAnyObjectByType<UIManager>();
+
+        if (spawnPoint == null)
+        {
+            GameObject spawnObject = GameObject.Find("SpawnPoint");
+            if (spawnObject != null)
+            {
+                spawnPoint = spawnObject.transform;
+            }
+        }
+
         RefreshUI();
     }
 
@@ -32,34 +43,74 @@ public class WaveManager : MonoBehaviour
         if (GameManager.Instance != null && GameManager.Instance.IsGameOver) return;
         if (currentWave >= enemiesPerWave.Length) return;
 
-        StartCoroutine(SpawnWave(enemiesPerWave[currentWave]));
+        StartCoroutine(SpawnWave());
     }
 
-    IEnumerator SpawnWave(int enemyCount)
+    IEnumerator SpawnWave()
     {
         waveRunning = true;
-        aliveEnemies = enemyCount;
+        aliveEnemies = enemiesPerWave[currentWave];
         RefreshUI();
 
-        for (int i = 0; i < enemyCount; i++)
+        if (debugLogs)
         {
-            if (enemyPrefab != null && spawnPoint != null)
-            {
-                GameObject enemyObject = Instantiate(enemyPrefab, spawnPoint.position, Quaternion.identity);
-                Enemy enemy = enemyObject.GetComponent<Enemy>();
-                ScaleEnemyForWave(enemy);
-            }
+            Debug.Log("Starting wave " + CurrentWaveDisplay + " with " + aliveEnemies + " enemies.", this);
+        }
 
+        for (int i = 0; i < enemiesPerWave[currentWave]; i++)
+        {
+            SpawnEnemy();
             yield return new WaitForSeconds(spawnDelay);
         }
+    }
+
+    void SpawnEnemy()
+    {
+        Vector3 spawnPosition = transform.position;
+
+        if (spawnPoint != null)
+        {
+            spawnPosition = spawnPoint.position;
+        }
+
+        GameObject enemyObject;
+
+        if (enemyPrefab != null)
+        {
+            enemyObject = Instantiate(enemyPrefab, spawnPosition, Quaternion.identity);
+        }
+        else
+        {
+            enemyObject = CreateRuntimeEnemy(spawnPosition);
+        }
+
+        Enemy enemy = enemyObject.GetComponent<Enemy>();
+        ScaleEnemyForWave(enemy);
+    }
+
+    GameObject CreateRuntimeEnemy(Vector3 spawnPosition)
+    {
+        GameObject enemyObject = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+        enemyObject.name = "Runtime Enemy";
+        enemyObject.transform.position = spawnPosition;
+        enemyObject.transform.localScale = new Vector3(0.8f, 1f, 0.8f);
+
+        Renderer enemyRenderer = enemyObject.GetComponent<Renderer>();
+        if (enemyRenderer != null)
+        {
+            enemyRenderer.material.color = Color.red;
+        }
+
+        enemyObject.AddComponent<Enemy>();
+        return enemyObject;
     }
 
     void ScaleEnemyForWave(Enemy enemy)
     {
         if (enemy == null) return;
 
-        float waveMultiplier = Mathf.Pow(enemyHealthMultiplierPerWave, currentWave);
-        enemy.maxHealth = Mathf.RoundToInt(enemy.maxHealth * waveMultiplier);
+        float healthMultiplier = Mathf.Pow(enemyHealthMultiplierPerWave, currentWave);
+        enemy.maxHealth = Mathf.RoundToInt(enemy.maxHealth * healthMultiplier);
         enemy.speed += enemySpeedBonusPerWave * currentWave;
         enemy.goldValue += currentWave * 2;
     }
@@ -69,9 +120,14 @@ public class WaveManager : MonoBehaviour
         if (!waveRunning) return;
 
         aliveEnemies--;
+
         if (aliveEnemies <= 0)
         {
             FinishWave();
+        }
+        else
+        {
+            RefreshUI();
         }
     }
 
@@ -79,6 +135,11 @@ public class WaveManager : MonoBehaviour
     {
         waveRunning = false;
         currentWave++;
+
+        if (debugLogs)
+        {
+            Debug.Log("Wave finished.", this);
+        }
 
         if (bonusSystem != null)
         {
@@ -94,6 +155,7 @@ public class WaveManager : MonoBehaviour
         {
             uiManager.UpdateWave(CurrentWaveDisplay);
             uiManager.UpdateStartWaveButton(waveRunning, currentWave >= enemiesPerWave.Length);
+            uiManager.UpdateWaveMessage(waveRunning, aliveEnemies);
         }
     }
 }

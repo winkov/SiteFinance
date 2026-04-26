@@ -4,9 +4,15 @@ public class Projectile : MonoBehaviour
 {
     public float speed = 15f;
     public float hitDistance = 0.25f;
+    public float visibleScale = 0.35f;
 
     private Enemy target;
     private int damage;
+
+    void Start()
+    {
+        transform.localScale = Vector3.one * visibleScale;
+    }
 
     public void SetTarget(Enemy enemy, int projectileDamage)
     {

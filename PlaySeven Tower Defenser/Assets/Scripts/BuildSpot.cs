@@ -10,7 +10,7 @@ public class BuildSpot : MonoBehaviour
 
     void Start()
     {
-        gameManager = FindFirstObjectByType<GameManager>();
+        gameManager = FindAnyObjectByType<GameManager>();
     }
 
     void OnMouseDown()

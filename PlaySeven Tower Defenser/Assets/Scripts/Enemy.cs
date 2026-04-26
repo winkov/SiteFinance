@@ -11,14 +11,15 @@ public class Enemy : MonoBehaviour
     private int currentWaypointIndex;
     private WaypointPath waypointPath;
     private WaveManager waveManager;
+    private bool isDead;
 
     void Start()
     {
         currentHealth = maxHealth;
         currentWaypointIndex = 0;
 
-        waypointPath = FindFirstObjectByType<WaypointPath>();
-        waveManager = FindFirstObjectByType<WaveManager>();
+        waypointPath = FindAnyObjectByType<WaypointPath>();
+        waveManager = FindAnyObjectByType<WaveManager>();
     }
 
     void Update()
@@ -61,6 +62,8 @@ public class Enemy : MonoBehaviour
 
     public void TakeDamage(int damage)
     {
+        if (isDead) return;
+
         currentHealth -= damage;
 
         if (currentHealth <= 0)
@@ -71,6 +74,8 @@ public class Enemy : MonoBehaviour
 
     void ReachEndOfPath()
     {
+        if (isDead) return;
+
         if (GameManager.Instance != null)
         {
             GameManager.Instance.DamageCastle(castleDamage);
@@ -81,6 +86,10 @@ public class Enemy : MonoBehaviour
 
     void Die(bool giveGold)
     {
+        if (isDead) return;
+
+        isDead = true;
+
         if (giveGold && GameManager.Instance != null)
         {
             GameManager.Instance.AddGold(goldValue);

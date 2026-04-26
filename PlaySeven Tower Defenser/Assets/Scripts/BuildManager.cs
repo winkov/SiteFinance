@@ -16,7 +16,7 @@ public class BuildManager : MonoBehaviour
 
     void Start()
     {
-        uiManager = FindFirstObjectByType<UIManager>();
+        uiManager = FindAnyObjectByType<UIManager>();
         SetBuildMode(false);
     }
 

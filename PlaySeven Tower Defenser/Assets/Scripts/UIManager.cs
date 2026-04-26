@@ -15,8 +15,8 @@ public class UIManager : MonoBehaviour
 
     void Start()
     {
-        waveManager = FindFirstObjectByType<WaveManager>();
-        buildManager = FindFirstObjectByType<BuildManager>();
+        waveManager = FindAnyObjectByType<WaveManager>();
+        buildManager = FindAnyObjectByType<BuildManager>();
 
         if (startWaveButton != null)
         {
@@ -84,6 +84,18 @@ public class UIManager : MonoBehaviour
         if (gameOver)
         {
             ShowMessage("Game Over");
+        }
+    }
+
+    public void UpdateWaveMessage(bool waveRunning, int aliveEnemies)
+    {
+        if (waveRunning)
+        {
+            ShowMessage("Enemies: " + aliveEnemies);
+        }
+        else
+        {
+            ShowMessage("");
         }
     }
 
