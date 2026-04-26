@@ -39,9 +39,28 @@ public class WaveManager : MonoBehaviour
 
     public void StartNextWave()
     {
-        if (waveRunning) return;
-        if (GameManager.Instance != null && GameManager.Instance.IsGameOver) return;
-        if (currentWave >= enemiesPerWave.Length) return;
+        if (debugLogs)
+        {
+            Debug.Log("WaveManager received StartNextWave.", this);
+        }
+
+        if (waveRunning)
+        {
+            Debug.Log("Wave is already running.", this);
+            return;
+        }
+
+        if (GameManager.Instance != null && GameManager.Instance.IsGameOver)
+        {
+            Debug.Log("Cannot start wave because game is over.", this);
+            return;
+        }
+
+        if (currentWave >= enemiesPerWave.Length)
+        {
+            Debug.Log("All waves are finished.", this);
+            return;
+        }
 
         StartCoroutine(SpawnWave());
     }
